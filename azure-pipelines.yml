@@ -1,0 +1,61 @@
+# Maven
+# Build your Java project and run tests with Apache Maven.
+# Add steps that analyze code, save build artifacts, deploy, and more:
+# https://docs.microsoft.com/azure/devops/pipelines/languages/java
+
+trigger:
+- main
+
+pool:
+  name: 'myagent'
+
+steps:
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: 'git clone https://github.com/IntelliqDevops/maven.git'
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: 'cd /home/azureuser/myagent/_work/2/s;mvn package'
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: |
+        cat <<EOF > dockerfile
+        FROM tomee
+        COPY webapp/target/webapp.war /usr/local/tomee/webapps/testapp.war
+        EOF
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: cd /home/azureuser/myagent/_work/2/s;docker build -t intelliqit.azurecr.io/myapp .
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: docker push intelliqit.azurecr.io/myapp
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: ssh azureuser@4.255.173.58 docker run  --name myapp -d -P intelliqit.azurecr.io/myapp
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: git clone https://github.com/IntelliqDevops/FunctionalTesting.git
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: java -jar /home/azureuser/myagent/_work/2/s/FunctionalTesting/testing.jar
+- task: Bash@3
+  inputs:
+    targetType: 'inline'
+    script: ssh azureuser@4.255.173.58 docker rm -f myapp
+- task: KubernetesManifest@1
+  inputs:
+    action: 'deploy'
+    connectionType: 'azureResourceManager'
+    azureSubscriptionConnection: 'Pay-As-You-Go(73477290-a1f0-415f-be2c-d92482bea439)'
+    azureResourceGroup: 'newproject'
+    kubernetesCluster: 'cluster-1'
+    useClusterAdmin: true
+    manifests: 'myapp.yml'

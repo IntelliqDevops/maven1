@@ -1,0 +1,45 @@
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: myapp-deployment
+  labels:
+    type: webserver
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      type: webserver
+  template:
+    metadata:
+      name: myapp-pod
+      labels:
+        type: webserver
+    spec:
+      containers:
+        - name: myapp
+          image: intelliqit.azurecr.io/myapp:latest
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: myapp-service
+  labels:
+    author: itnellqiit
+spec:
+  type: LoadBalancer
+  ports:
+    - targetPort: 8080
+      port: 80
+      nodePort: 30009
+  selector:
+    type: webserver
+...
+
+
+
+
+
+
+
+
