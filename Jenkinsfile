@@ -1,47 +1,60 @@
+@Library('mylibrary')_
+
 pipeline
 {
     agent any
     stages
     {
-        stage('ContDownload')
+        stage('Download_Master')
         {
             steps
             {
-                git 'https://github.com/IntelliqDevops/maven.git'
+                script
+                {
+                    cicd.gitDownload("maven")
+                }
             }
         }
-        stage('ContBuild')
+        stage('Build_Master')
         {
             steps
             {
-                sh 'mvn package'
+                script
+                {
+                    cicd.buildArtifact()
+                }
             }
         }
-        stage('ContDeployment')
+        stage('Deployment_Master')
         {
             steps
             {
-                sh 'scp /var/lib/jenkins/workspace/DeclarativePipeline1/webapp/target/webapp.war ubuntu@172.31.87.224:/var/lib/tomcat10/webapps/mytestapp.war'
+                script
+                {
+                    cicd.deployTomcat("DeclarativePipelinewithSharedLibraries","172.31.87.224","testapp")
+                }
             }
         }
-        stage('ContTesting')
+        stage('Testing_Master')
         {
             steps
             {
-                git 'https://github.com/IntelliqDevops/FunctionalTesting.git'
-                sh 'java -jar /var/lib/jenkins/workspace/DeclarativePipeline1/testing.jar'
+                script
+                {
+                    cicd.gitDownload("FunctionalTesting")
+                    cicd.runSelenium("DeclarativePipelinewithSharedLibraries")
+                }
             }
         }
-        stage('ContDelivery')
+        stage('Delivery_Master')
         {
             steps
             {
-                sh 'scp /var/lib/jenkins/workspace/DeclarativePipeline1/webapp/target/webapp.war ubuntu@172.31.83.85:/var/lib/tomcat10/webapps/myprodapp.war'
+                script
+                {
+                    cicd.deployTomcat("DeclarativePipelinewithSharedLibraries","172.31.83.85","prodapp")
+                }
             }
         }
-        
-        
-        
-        
     }
 }
